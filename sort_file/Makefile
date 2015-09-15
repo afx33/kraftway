@@ -1,8 +1,6 @@
 CC = g++
 CFLAGS=-Wall -ggdb -g3 -std=c++0x -std=c++11
 
-#CFLAGS=-Wall -ggdb -g3 -std=c++11
-
 all: sort_file
 
 sort_file: main.o

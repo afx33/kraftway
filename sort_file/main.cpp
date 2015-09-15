@@ -12,7 +12,8 @@
 
 using namespace std;
 
-#define FILENAME "d:\\work\\kraftway\\file_creator\\file_creator\\unsorted"
+//#define FILENAME "d:\\work\\kraftway\\file_creator\\file_creator\\unsorted"
+#define FILENAME "unsorted"
 #define OUT_FILENAME "sorted"
 //#define MEM_LIMIT (1000*1024*1024) // 1000 Mb
 //#define CHUNK_SIZE (50*1024*1024) // 50 Mb
@@ -275,10 +276,7 @@ void ExternalSort::sort()
 class ExternalSortTest : public ExternalSort
 {
 public:
-	ExternalSortTest(const char *filename, const char *out_filename, unsigned chunk_size, unsigned buf_size) : ExternalSort(filename, out_filename, chunk_size, buf_size) 
-	{
-		m_out_filename = out_filename;
-	}
+	ExternalSortTest(const char *filename, const char *out_filename, unsigned chunk_size, unsigned buf_size) : ExternalSort(filename, out_filename, chunk_size, buf_size) {}
 	void print_file()
 	{		
 		uint32_t v;
@@ -289,6 +287,8 @@ public:
 
 	void print_out_file()
 	{	
+		cout << "output filename: " << m_out_filename << endl;
+		m_out_file.close();
 		std::ifstream file;
 		file.open(m_out_filename, std::ofstream::binary);	
 		if (file.is_open()) {
@@ -297,11 +297,10 @@ public:
 				cout << v << ' ';
 			cout << '\n';
 			file.close();
+		} else {
+			throw ExternalSortException("Couldn't open output file");
 		}
 	};
-
-private:
-		const char *m_out_filename;
 	
 };
 
