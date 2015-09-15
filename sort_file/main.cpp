@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <sstream>
 #include <string>
+#include <stdexcept>
+#include <exception>
 
 using namespace std;
 
@@ -60,7 +62,7 @@ private:
 	//std::ifstream::pos_type m_size; 
 	void write_chunk(const char *filename, std::vector<uint32_t>& what);
 	bool push_chunk(vector<uint32_t> &chunk);
-	void merge(vector<vector<uint32_t>> &what, vector<uint32_t> &goal_buf);
+	void merge(vector< vector<uint32_t> > &what, vector<uint32_t> &goal_buf);
 	void save(vector<uint32_t> goal_buf);
 
 //	for test purposes
@@ -102,12 +104,12 @@ void ExternalSort::save(vector<uint32_t> goal_buf)
 
 }
 
-void ExternalSort::merge(vector<vector<uint32_t>> &what, vector<uint32_t> &goal_buf)
+void ExternalSort::merge(vector< vector<uint32_t> > &what, vector<uint32_t> &goal_buf)
 {
 	assert(what.size());
 
 	unsigned buf_size = m_buf_size/sizeof(uint32_t);
-	vector<vector<uint32_t>>::iterator it = what.begin();
+	vector< vector<uint32_t> >::iterator it = what.begin();
 	unsigned buf_cnt = what.size();
 	unsigned i = 0;
 	unsigned j = 0;
@@ -220,7 +222,6 @@ void ExternalSort::sort()
 		unsigned buf_size = m_buf_size/sizeof(uint32_t);
 		bool not_eof = true;
 		uint32_t v;
-		unsigned shift = 0;
 		
 		while (not_eof) {
 			
@@ -234,7 +235,7 @@ void ExternalSort::sort()
 				ifstream chunk_file(*it);
 				chunk_file.seekg(chunk_pos[buf_idx] * sizeof(uint32_t));
 				unsigned idx = 0;
-				while (buf_cnt-- /*&& idx < 3*/) {
+				while (buf_cnt--) {
 					if (buf_size > bufs[buf_idx].size()) {		
 						if (chunk_file.read((char *)&(v), sizeof(v))) {
 							bufs[buf_idx].push_back(v);
