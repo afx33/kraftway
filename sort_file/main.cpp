@@ -21,6 +21,13 @@ using namespace std;
 #define CHUNK_SIZE 256 // 50 Bytes
 #define BUF_SIZE 40 // 40 Bytes
 
+class ExternalSortException : public std::runtime_error {
+public:
+    ExternalSortException(const string& message) 
+            : std::runtime_error(message) { };
+};
+
+
 class ExternalSortTest;
 
 class ExternalSort
@@ -33,12 +40,12 @@ public:
 		assert(buf_size > 1);
 		m_file.open(filename,  ios::binary);
 		if (!m_file.is_open()) {
-			throw std::exception("Couldn't open file");
+			throw ExternalSortException("Couldn't open input file");
 		}
 
 		m_out_file.open(out_filename,  ios::binary);
 		if (!m_out_file.is_open()) {
-			throw std::exception("Couldn't open file");
+			throw ExternalSortException("Couldn't open output file");
 		}
 		
 		m_chunk_size = chunk_size;
