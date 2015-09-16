@@ -351,7 +351,7 @@ public:
 			throw ExternalSortException("Couldn't open input file");
 		}
 
-		uint32_t v;
+		// uint32_t v;
 		
 		/*if (!file.read((char *)&(v), sizeof(v))) {
 			throw ExternalSortException("Couldn't read input file");
@@ -422,14 +422,14 @@ int main()
 	}
 
 	{
-		/*try {
+		try {
 			ExternalSortTest est(FILENAME1, OUT_FILENAME, 40, 12);			
 			est.sort();
 			est.print_out_file();
 		} catch (std::exception)
 		{
 			fprintf(stderr, "Exception is occured\n");
-		}*/
+		}
 	}
 
 	{
