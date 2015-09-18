@@ -34,6 +34,12 @@ public:
 
 class ExternalSortTest;
 
+/**
+  * External sort method implementation
+  * Big file is divided into several chunks, each chunk is sorted separately
+  * From every chunk small buffer is extracted and merged into goal buffer (consequentially)
+  * till numbers is over
+  */
 class ExternalSort
 {
 public:
@@ -67,14 +73,21 @@ public:
 	void sort();
 	
 private:
+
 	ifstream m_file;
 	ofstream m_out_file;
 	const char *m_out_filename;
-	//std::ifstream::pos_type m_size; 
+
+	// write chunk numbers into file represented by @filename
 	void write_chunk(const char *filename, std::vector<uint32_t>& what);
+	// read numbers from file and create chunk (must be executed consequentially)
 	bool push_chunk(vector<uint32_t> &chunk, ifstream &file);
+	// erase minimal numbers from @what and fill @goal_buf
 	void merge(vector< vector<uint32_t> > &what, vector<uint32_t> &goal_buf);
+	// save sorted values in output file
 	void save(vector<uint32_t> goal_buf);
+	// walk throught chunk files for buffer creation
+	void walk_chunk_files(vector<std::string> &chunk_files);
 
 //	for test purposes
 	void read_file(const char *filename, std::vector<uint32_t> &buf);
@@ -123,7 +136,8 @@ void ExternalSort::merge(vector< vector<uint32_t> > &what, vector<uint32_t> &goa
 	
 /*#ifdef DEBUG
 	for(unsigned i=0; i < what.size(); i++) 
-		assert(what[i].size());
+		if (!what[i].size())
+			int brk = 0;
 #endif*/
 
 	unsigned buf_size = m_buf_size/sizeof(uint32_t);
@@ -140,7 +154,7 @@ void ExternalSort::merge(vector< vector<uint32_t> > &what, vector<uint32_t> &goa
 
 		what_empty = true;
 		
-		while(min_idx < buf_size) {
+		while(min_idx < buf_cnt) {
 			if (what[min_idx].size()) {
 				min = what[min_idx][0];
 				to_del = min_idx;
@@ -210,30 +224,13 @@ bool ExternalSort::push_chunk(vector<uint32_t> &chunk, ifstream &file)
 		return eof;
 }
 
-void ExternalSort::sort()
+void ExternalSort::walk_chunk_files(vector<std::string> &chunk_files)
 {
-	bool eof = false;
-	unsigned i = 0;
-	vector<std::string> chunk_files;
-	
-	while(!eof) {
-		vector<uint32_t> chunk;
-		eof = push_chunk(chunk, m_file);
-		
-		if (chunk.size()) {
-			std::stringstream ss;
-			std::string s = to_string((long double)++i);
-			ss << "chunk" << s.c_str();
-			write_chunk(ss.str().c_str(), chunk);
-			chunk_files.push_back(ss.str());
-		}
-	}
+		assert(chunk_files.size());
 
-	assert(chunk_files.size());
-	
-	{
 		vector< vector<uint32_t> > bufs;
 		vector<std::string>::iterator it = chunk_files.begin();
+		
 		// for every chunk file we have to remember current position
 		std::vector<unsigned> chunk_pos;
 		chunk_pos.resize(chunk_files.size(), 0);
@@ -243,6 +240,7 @@ void ExternalSort::sort()
 			bufs.push_back(buf);
 			it++;
 		}
+
 		// walk throught chunk files
 		it = chunk_files.begin();
 		
@@ -252,6 +250,7 @@ void ExternalSort::sort()
 		bool not_eof = true;
 		uint32_t v;
 		
+		// while there is data in files
 		while (not_eof) {
 			
 			it = chunk_files.begin();
@@ -288,9 +287,28 @@ void ExternalSort::sort()
 		merge(bufs, goal_buf);
 		save(goal_buf);	
 
+}
+
+void ExternalSort::sort()
+{
+	bool eof = false;
+	unsigned i = 0;
+	vector<std::string> chunk_files;
+	
+	while(!eof) {
+		vector<uint32_t> chunk;
+		eof = push_chunk(chunk, m_file);
 		
+		if (chunk.size()) {
+			std::stringstream ss;
+			std::string s = to_string((long double)++i);
+			ss << "chunk" << s.c_str();
+			write_chunk(ss.str().c_str(), chunk);
+			chunk_files.push_back(ss.str());
+		}
 	}
 
+	walk_chunk_files(chunk_files);
 }
 
 class ExternalSortTest : public ExternalSort
@@ -404,8 +422,19 @@ int main()
 	}
 
 	{
-		try {
+		/*try {
 			ExternalSortTest est(FILENAME1, OUT_FILENAME, 40, 12);			
+			est.sort();
+			est.print_out_file();
+		} catch (std::exception)
+		{
+			fprintf(stderr, "Exception is occured\n");
+		}*/
+	}
+
+	{
+		try {
+			ExternalSortTest est(FILENAME2, OUT_FILENAME, 100, 12);			
 			est.sort();
 			est.print_out_file();
 		} catch (std::exception)
@@ -413,6 +442,7 @@ int main()
 			fprintf(stderr, "Exception is occured\n");
 		}
 	}
+
 
 	 
 	return 0;
