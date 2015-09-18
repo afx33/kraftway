@@ -7,3 +7,4 @@ file_creator/ipch/
 sort_file/Debug/
 sort_file/sorted
 sort_file/unsort*
+file_creator/*.sdf

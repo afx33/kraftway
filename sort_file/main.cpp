@@ -38,7 +38,7 @@ class ExternalSortTest;
   * External sort method implementation
   * Big file is divided into several chunks, each chunk is sorted separately
   * From every chunk small buffer is extracted and merged into goal buffer (consequentially)
-  * till numbers is over
+  * till numbers are over
   */
 class ExternalSort
 {
@@ -438,6 +438,17 @@ int main()
 	{
 		try {
 			ExternalSortTest est(FILENAME3, OUT_FILENAME, 100, 12);			
+			est.sort();
+			est.print_out_file();
+		} catch (std::exception)
+		{
+			fprintf(stderr, "Exception is occurred\n");
+		}
+	}
+
+	{
+		try {
+			ExternalSortTest est(FILENAME3, OUT_FILENAME, 400, 120);			
 			est.sort();
 			est.print_out_file();
 		} catch (std::exception)
