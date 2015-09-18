@@ -342,7 +342,7 @@ public:
 			throw ExternalSortException("Couldn't open input file");
 		}
 
-		uint32_t v;
+		// uint32_t v;
 		
 		/*if (!file.read((char *)&(v), sizeof(v))) {
 			throw ExternalSortException("Couldn't read input file");
