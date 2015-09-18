@@ -44,7 +44,23 @@ int main()
 		file.open("unsorted2", std::ofstream::binary);	
 		for(unsigned k=0; k < 11; k++)	{	
 			if (file.is_open()) {
-				for(unsigned i = 0; i < sizeof(10); i++) { 
+				for(unsigned i = 0; i < 10; i++) { 
+					*(pm+i) = rand();		
+					file.write((char *)&(*(pm+i)), sizeof(uint32_t)); 					
+				}
+			}
+		}
+		file.close();
+		delete [] pm;
+	}
+
+	{
+		uint32_t *pm = new uint32_t[100];
+		std::ofstream file;
+		file.open("unsorted3", std::ofstream::binary);	
+		for(unsigned k=0; k < 10; k++)	{	
+			if (file.is_open()) {
+				for(unsigned i = 0; i < 100; i++) { 
 					*(pm+i) = rand();		
 					file.write((char *)&(*(pm+i)), sizeof(uint32_t)); 					
 				}

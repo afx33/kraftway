@@ -15,6 +15,7 @@ using namespace std;
 #define FILENAME "unsorted"
 #define FILENAME1 "unsorted1"
 #define FILENAME2 "unsorted2"
+#define FILENAME3 "unsorted3"
 #define OUT_FILENAME "sorted"
 //#define MEM_LIMIT (1000*1024*1024) // 1000 Mb
 //#define CHUNK_SIZE (50*1024*1024) // 50 Mb
@@ -424,14 +425,25 @@ int main()
 	}
 
 	{
-		/*try {
+		try {
 			ExternalSortTest est(FILENAME2, OUT_FILENAME, 100, 12);			
 			est.sort();
 			est.print_out_file();
 		} catch (std::exception)
 		{
 			fprintf(stderr, "Exception is occurred\n");
-		}*/
+		}
+	}
+
+	{
+		try {
+			ExternalSortTest est(FILENAME3, OUT_FILENAME, 100, 12);			
+			est.sort();
+			est.print_out_file();
+		} catch (std::exception)
+		{
+			fprintf(stderr, "Exception is occurred\n");
+		}
 	}
 
 

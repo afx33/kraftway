@@ -1,0 +1,9 @@
+*.sdf
+sort_file/chunk*
+file_creator/Debug/
+file_creator/file_creator.opensdf
+file_creator/file_creator/Debug/
+file_creator/ipch/
+sort_file/Debug/
+sort_file/sorted
+sort_file/unsort*
