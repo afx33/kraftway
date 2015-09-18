@@ -1,4 +1,4 @@
-﻿#include <iostream>
+#include <iostream>
 #include <fstream>
 #include <stdint.h>
 #include <ctime>
@@ -14,6 +14,7 @@ using namespace std;
 
 //#define FILENAME "d:\\work\\kraftway\\file_creator\\file_creator\\unsorted"
 #define FILENAME "unsorted"
+#define FILENAME2 "unsorted2"
 #define OUT_FILENAME "sorted"
 //#define MEM_LIMIT (1000*1024*1024) // 1000 Mb
 //#define CHUNK_SIZE (50*1024*1024) // 50 Mb
@@ -22,6 +23,7 @@ using namespace std;
 #define CHUNK_SIZE 256 // 50 Bytes
 #define BUF_SIZE 40 // 40 Bytes
 
+// custom exception to avoid non standart std::exception
 class ExternalSortException : public std::runtime_error {
 public:
     ExternalSortException(const string& message) 
@@ -69,7 +71,7 @@ private:
 	const char *m_out_filename;
 	//std::ifstream::pos_type m_size; 
 	void write_chunk(const char *filename, std::vector<uint32_t>& what);
-	bool push_chunk(vector<uint32_t> &chunk);
+	bool push_chunk(vector<uint32_t> &chunk, ifstream &file);
 	void merge(vector< vector<uint32_t> > &what, vector<uint32_t> &goal_buf);
 	void save(vector<uint32_t> goal_buf);
 
@@ -106,15 +108,22 @@ void ExternalSort::save(vector<uint32_t> goal_buf)
 		m_out_file.flush();
 	}
 	
-
+#ifdef DEBUG
 	std::vector<uint32_t> res;
 	read_file(m_out_filename, res);
+#endif
 
 }
 
 void ExternalSort::merge(vector< vector<uint32_t> > &what, vector<uint32_t> &goal_buf)
 {
 	assert(what.size());
+	assert(m_buf_size%sizeof(uint32_t) == 0);
+	
+#ifdef DEBUG
+	for(unsigned i=0; i < what.size(); i++) 
+		assert(what[i].size());
+#endif	
 
 	unsigned buf_size = m_buf_size/sizeof(uint32_t);
 	vector< vector<uint32_t> >::iterator it = what.begin();
@@ -163,22 +172,24 @@ void ExternalSort::write_chunk(const char *filename, std::vector<uint32_t>& what
 		}
 		file.close();
 	} else {
-		throw std::exception();
+		throw ExternalSortException("Couldn't open chunk file");
 	}
 }
 
 bool chunk_compare (int i, int j) { return (i < j); }
 
-bool ExternalSort::push_chunk(vector<uint32_t> &chunk)
+bool ExternalSort::push_chunk(vector<uint32_t> &chunk, ifstream &file)
 {
 		bool eof = false;
+		assert(m_chunk_size%sizeof(uint32_t) == 0);
 		const unsigned chunk_num_cnt  = m_chunk_size / sizeof(uint32_t);
-		assert(chunk_num_cnt > 1);
+
+		assert(chunk_num_cnt > 1);		
 		
 		unsigned i = 0;
 		uint32_t v;
 		while (i < chunk_num_cnt) {
-			if (m_file.read((char *)&(v), sizeof(v)))
+			if (file.read((char *)&(v), sizeof(v)))
 				chunk.push_back(v);
 			else {
 				eof = true;
@@ -199,7 +210,7 @@ void ExternalSort::sort()
 	
 	while(!eof) {
 		vector<uint32_t> chunk;
-		eof = push_chunk(chunk);
+		eof = push_chunk(chunk, m_file);
 		
 		if (chunk.size()) {
 			std::stringstream ss;
@@ -220,13 +231,15 @@ void ExternalSort::sort()
 		chunk_pos.resize(chunk_files.size(), 0);
 		// create buffers
 		while (it != chunk_files.end()) {
-			std::vector<uint32_t> buf;
-			//buf.resize(buf_size, -1);
+			std::vector<uint32_t> buf;			
 			bufs.push_back(buf);
 			it++;
 		}
 		// walk throught chunk files
 		it = chunk_files.begin();
+		
+		assert(m_buf_size%sizeof(uint32_t) == 0);
+
 		unsigned buf_size = m_buf_size/sizeof(uint32_t);
 		bool not_eof = true;
 		uint32_t v;
@@ -241,8 +254,7 @@ void ExternalSort::sort()
 				unsigned buf_cnt = buf_size;
 				std::vector<uint32_t> buf;
 				ifstream chunk_file(*it);
-				chunk_file.seekg(chunk_pos[buf_idx] * sizeof(uint32_t));
-				unsigned idx = 0;
+				chunk_file.seekg(chunk_pos[buf_idx] * sizeof(uint32_t));				
 				while (buf_cnt--) {
 					if (buf_size > bufs[buf_idx].size()) {		
 						if (chunk_file.read((char *)&(v), sizeof(v))) {
@@ -250,13 +262,10 @@ void ExternalSort::sort()
 							not_eof = true;
 							chunk_pos[buf_idx]++;
 						}
-					}
-					idx++;
-				}
-				//bufs.push_back(buf);
+					}					
+				}				
 				it++;
-				buf_idx++;				
-				//buf_num++;
+				buf_idx++;								
 			}
 			
 			// send values from buffers into goal buffer
@@ -301,21 +310,99 @@ public:
 			throw ExternalSortException("Couldn't open output file");
 		}
 	};
+
+	void test_push_chunk()
+	{
+		std::vector<uint32_t> chunk;
+
+		ifstream file;
+		
+		file.open("unsorted1",  ios::binary);
+		if (!m_file.is_open()) {
+			throw ExternalSortException("Couldn't open input file");
+		}
+
+		uint32_t v;
+		
+		/*if (!file.read((char *)&(v), sizeof(v))) {
+			throw ExternalSortException("Couldn't read input file");
+		}*/
+
+		//m_chunk_size = 1;
+		//push_chunk(chunk, file);	// assert - ok
+
+		// chunk.clear();
+		// m_chunk_size=100;
+		// push_chunk(chunk, file); // ok
+
+		//chunk.clear();
+		//m_chunk_size=29;  
+		//push_chunk(chunk, file);	// assert - ok (must be multiple of 4) 
+
+		chunk.clear();
+		m_chunk_size=4294967292;	// 2^32-4
+		push_chunk(chunk, file);
+
+		file.close();
+
+		file.open("unsorted2",  ios::binary);
+		if (!m_file.is_open()) {
+			throw ExternalSortException("Couldn't open input file");
+		}
+
+		 chunk.clear();
+		 m_chunk_size=100;
+		 push_chunk(chunk, file); // ok
+
+		 file.close();
+	}
+
+	void test_merge()
+	{
+		vector< vector<uint32_t> > what;
+		vector<uint32_t> goal_buf;
+		
+		// merge(what, goal_buf); // assert - ok
+
+		//what.resize(1000000);
+		//merge(what, goal_buf);	// assert - ok
+
+		vector<uint32_t> v;
+		v.resize(100, 10);
+		what.clear();
+		what.push_back(v);
+		merge(what, goal_buf);
+	}	
 	
 };
 
 
 int main()
 {
-	try {
-		ExternalSortTest est(FILENAME, OUT_FILENAME, 40, 12);
-		//est.print();
-		est.sort();
-		est.print_out_file();
-	} catch (std::exception)
 	{
-		fprintf(stderr, "Exception is occured\n");
+		/*try {
+			ExternalSortTest est(FILENAME, OUT_FILENAME, 40, 12);
+			est.test_push_chunk();
+			est.test_merge();
+			//est.sort();
+			//est.print_out_file();
+		} catch (std::exception)
+		{
+			fprintf(stderr, "Exception is occured\n");
+		}*/
 	}
+
+	{
+		try {
+			ExternalSortTest est(FILENAME, OUT_FILENAME, 40, 12);			
+			est.sort();
+			est.print_out_file();
+		} catch (std::exception)
+		{
+			fprintf(stderr, "Exception is occured\n");
+		}
+	}
+
 	 
 	return 0;
 }
