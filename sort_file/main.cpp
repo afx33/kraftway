@@ -12,7 +12,6 @@
 
 using namespace std;
 
-//#define FILENAME "d:\\work\\kraftway\\file_creator\\file_creator\\unsorted"
 #define FILENAME "unsorted"
 #define FILENAME1 "unsorted1"
 #define FILENAME2 "unsorted2"
@@ -74,9 +73,9 @@ public:
 	
 private:
 
-	ifstream m_file;
-	ofstream m_out_file;
-	const char *m_out_filename;
+	ifstream m_file;			// input unsorted file
+	ofstream m_out_file;		// output sorted file
+	const char *m_out_filename;	// output filename
 
 	// write chunk numbers into file represented by @filename
 	void write_chunk(const char *filename, std::vector<uint32_t>& what);
@@ -89,7 +88,7 @@ private:
 	// walk throught chunk files for buffer creation
 	void walk_chunk_files(vector<std::string> &chunk_files);
 
-//	for test purposes
+	//	for test purposes
 	void read_file(const char *filename, std::vector<uint32_t> &buf);
 	
 	unsigned m_chunk_size;
@@ -104,9 +103,7 @@ void ExternalSort::read_file(const char *filename, std::vector<uint32_t> &buf)
 		if (file.is_open()) {
 			uint32_t v;
 			while(file.read((char *)&v, sizeof(v))) 
-				buf.push_back(v);
-				//cout << v << ' ';
-			//cout << '\n';
+				buf.push_back(v);				
 			file.close();
 		}
 };
@@ -134,12 +131,6 @@ void ExternalSort::merge(vector< vector<uint32_t> > &what, vector<uint32_t> &goa
 	assert(what.size());
 	assert(m_buf_size%sizeof(uint32_t) == 0);
 	
-/*#ifdef DEBUG
-	for(unsigned i=0; i < what.size(); i++) 
-		if (!what[i].size())
-			int brk = 0;
-#endif*/
-
 	unsigned buf_size = m_buf_size/sizeof(uint32_t);
 	vector< vector<uint32_t> >::iterator it = what.begin();
 	unsigned buf_cnt = what.size();
@@ -417,30 +408,30 @@ int main()
 			//est.print_out_file();
 		} catch (std::exception)
 		{
-			fprintf(stderr, "Exception is occured\n");
-		}*/
-	}
-
-	{
-		/*try {
-			ExternalSortTest est(FILENAME1, OUT_FILENAME, 40, 12);			
-			est.sort();
-			est.print_out_file();
-		} catch (std::exception)
-		{
-			fprintf(stderr, "Exception is occured\n");
+			fprintf(stderr, "Exception is occurred\n");
 		}*/
 	}
 
 	{
 		try {
+			ExternalSortTest est(FILENAME1, OUT_FILENAME, 40, 12);			
+			est.sort();
+			est.print_out_file();
+		} catch (std::exception)
+		{
+			fprintf(stderr, "Exception is occurred\n");
+		}
+	}
+
+	{
+		/*try {
 			ExternalSortTest est(FILENAME2, OUT_FILENAME, 100, 12);			
 			est.sort();
 			est.print_out_file();
 		} catch (std::exception)
 		{
-			fprintf(stderr, "Exception is occured\n");
-		}
+			fprintf(stderr, "Exception is occurred\n");
+		}*/
 	}
 
 
