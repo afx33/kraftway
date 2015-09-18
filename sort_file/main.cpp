@@ -14,6 +14,7 @@ using namespace std;
 
 //#define FILENAME "d:\\work\\kraftway\\file_creator\\file_creator\\unsorted"
 #define FILENAME "unsorted"
+#define FILENAME1 "unsorted1"
 #define FILENAME2 "unsorted2"
 #define OUT_FILENAME "sorted"
 //#define MEM_LIMIT (1000*1024*1024) // 1000 Mb
@@ -120,10 +121,10 @@ void ExternalSort::merge(vector< vector<uint32_t> > &what, vector<uint32_t> &goa
 	assert(what.size());
 	assert(m_buf_size%sizeof(uint32_t) == 0);
 	
-#ifdef DEBUG
+/*#ifdef DEBUG
 	for(unsigned i=0; i < what.size(); i++) 
 		assert(what[i].size());
-#endif	
+#endif*/
 
 	unsigned buf_size = m_buf_size/sizeof(uint32_t);
 	vector< vector<uint32_t> >::iterator it = what.begin();
@@ -133,17 +134,24 @@ void ExternalSort::merge(vector< vector<uint32_t> > &what, vector<uint32_t> &goa
 	unsigned to_del = 0;
 	unsigned min = 0;
 	unsigned min_idx = 0;
+	bool what_empty = false;
 
 	while(i < buf_size) {
+
+		what_empty = true;
 		
 		while(min_idx < buf_size) {
 			if (what[min_idx].size()) {
 				min = what[min_idx][0];
 				to_del = min_idx;
+				what_empty = false;
 				break;
 			}
 			min_idx++;
 		}
+
+		if (what_empty)
+			break;
 		
 		while (j < buf_cnt) {
 			if (what[j].size() && what[j][0] < min) {
@@ -265,9 +273,9 @@ void ExternalSort::sort()
 					}					
 				}				
 				it++;
-				buf_idx++;								
+				buf_idx++;				
 			}
-			
+
 			// send values from buffers into goal buffer
 			std::vector<uint32_t> goal_buf;
 			merge(bufs, goal_buf);
@@ -275,7 +283,10 @@ void ExternalSort::sort()
 			save(goal_buf);		
 		}
 
-
+		// it the rest in buffer exists merge it out
+		std::vector<uint32_t> goal_buf;
+		merge(bufs, goal_buf);
+		save(goal_buf);	
 
 		
 	}
@@ -394,7 +405,7 @@ int main()
 
 	{
 		try {
-			ExternalSortTest est(FILENAME, OUT_FILENAME, 40, 12);			
+			ExternalSortTest est(FILENAME1, OUT_FILENAME, 40, 12);			
 			est.sort();
 			est.print_out_file();
 		} catch (std::exception)
