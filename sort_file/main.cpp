@@ -66,6 +66,9 @@ public:
 	{
 		if (m_file.is_open())
 			m_file.close();
+
+		if (m_out_file.is_open())
+			m_out_file.close();
 	}
 
 	friend class ExternalSortTest;
